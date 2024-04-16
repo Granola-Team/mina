@@ -406,7 +406,7 @@ let setup_daemon logger =
       ~doc:"URL of the node error collection service"
   and node_status_type =
     flag "--node-status-type" ~aliases:[ "node-status-type" ]
-      (optional_with_default `Simple Cli_lib.Arg_type.node_status_type)
+      (optional_with_default `None Cli_lib.Arg_type.node_status_type)
       ~doc:
         "full|simple|none Whether to report simple, full or no node stats \
          (default: simple)"
