@@ -5,7 +5,6 @@ import subprocess
 import json
 import time
 import sys
-import graphyte
 import math
 
 
@@ -70,7 +69,7 @@ for tree in snark_job_list:
             leavestotal['total'] += 1
         else:
             # should never get here
-            print('fouind no match:', data)
+            print('found no match:', data)
 
         # Print lines on powers of 2
         if (not math.log(slotid + 2, 2) % 1):
