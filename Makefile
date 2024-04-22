@@ -10,6 +10,8 @@ WORD_SIZE = "64"
 # Default profile
 DUNE_PROFILE ?= dev
 
+OPAMROOT ?= ../opam
+
 # Temp directory
 TMPDIR ?= /tmp
 
@@ -59,7 +61,6 @@ clean:
 	@rm -rf _build
 	@rm -rf src/$(COVERAGE_DIR)
 	@rm -rf src/app/libp2p_helper/result src/libp2p_ipc/libp2p_ipc.capnp.go
-	@rm opam
 
 # enforces the OCaml version being used
 ocaml_version:
@@ -69,12 +70,11 @@ ocaml_version:
 ocaml_word_size:
 	@if ! ocamlopt -config | grep "word_size:" | grep $(WORD_SIZE); then echo "invalid machine word size, expected $(WORD_SIZE)" ; exit 1; fi
 
-opam/config: opam.export
-	opam init -n -y --reinit
-	opam switch -y import --assume-depexts opam.export
-	scripts/pin-external-packages.sh
+$(OPAMROOT)/config: opam.export
+	opam init -n -y --reinit --bare
+	opam switch -y import --strict --assume-depexts opam.export
 
-opam_init: opam/config
+opam_init: $(OPAMROOT)/config
 
 ocaml_checks: opam_init ocaml_version ocaml_word_size
 
@@ -88,9 +88,9 @@ genesis_ledger: ocaml_checks
 
 build: ocaml_checks reformat-diff libp2p_helper
 	$(info Starting Build)
-	# dune build src/app/logproc/logproc.exe --profile=$(DUNE_PROFILE)
-	# dune build src/app/cli/src/mina.exe --profile=$(DUNE_PROFILE)
-	dune build src/app/cli/src/mina.exe
+	dune build src/app/logproc/logproc.exe --profile=$(DUNE_PROFILE)
+	dune build src/app/cli/src/mina.exe --profile=$(DUNE_PROFILE)
+	# dune build src/app/cli/src/mina.exe
 	$(info Build complete)
 
 build_all_sigs: ocaml_checks git_hooks reformat-diff libp2p_helper
