@@ -1,14 +1,27 @@
 #! /usr/bin/env nix-shell
-#! nix-shell -i bash -p bash opam go capnproto
+#! nix-shell -i bash -p bash gnumake opam go capnproto libffi libsodium pkg-config gnum4 postgresql gmp
 
+# Trace this script
 set -x
-set -eu
 
+# Ensure that we are running Bash. Set safe defaults.
+set -euo pipefail
+
+# Ensure that we have 'make', and print version debugging info.
+make --version
+
+# Configure the shell according to the Makefile-prescribed configuration for Opam.
+make opam_init
 eval "$(opam env)"
 
+# Ensure that we have Ocaml, and its utilities (include Dune), at hand.
+command -v ocaml
+command -v ocamlopt
+command -v dune
+
+# Make various targets, in dependency order.
 make ocaml_version
 make ocaml_word_size
-make opam_init
 make ocaml_checks
 make reformat-diff
 make libp2p_helper

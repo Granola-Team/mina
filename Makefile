@@ -8,9 +8,7 @@ OCAML_VERSION = "4.14.0"
 WORD_SIZE = "64"
 
 # Default profile
-ifeq ($(DUNE_PROFILE),)
-DUNE_PROFILE := dev
-endif
+DUNE_PROFILE ?= dev
 
 # Temp directory
 TMPDIR ?= /tmp
@@ -27,6 +25,7 @@ COVERAGE_DIR=_coverage
 # This commit hash
 GITHASH := $(shell git rev-parse --short=8 HEAD)
 GITLONGHASH := $(shell git rev-parse HEAD)
+MINA_COMMIT_SHA1 := $(GITLONGHASH)
 
 # Unique signature of libp2p code tree
 LIBP2P_HELPER_SIG := $(shell cd src/app/libp2p_helper ; find . -type f -print0  | xargs -0 sha1sum | sort | sha1sum | cut -f 1 -d ' ')
@@ -60,6 +59,7 @@ clean:
 	@rm -rf _build
 	@rm -rf src/$(COVERAGE_DIR)
 	@rm -rf src/app/libp2p_helper/result src/libp2p_ipc/libp2p_ipc.capnp.go
+	@rm opam
 
 # enforces the OCaml version being used
 ocaml_version:
@@ -71,11 +71,12 @@ ocaml_word_size:
 
 opam/config: opam.export
 	opam init -n -y --reinit
-	opam switch -y import opam.export
+	opam switch -y import --assume-depexts opam.export
+	scripts/pin-external-packages.sh
 
 opam_init: opam/config
 
-ocaml_checks: ocaml_version ocaml_word_size opam_init
+ocaml_checks: opam_init ocaml_version ocaml_word_size
 
 libp2p_helper:
 	make -C src/app/libp2p_helper
@@ -87,7 +88,9 @@ genesis_ledger: ocaml_checks
 
 build: ocaml_checks reformat-diff libp2p_helper
 	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && env MINA_COMMIT_SHA1=$(GITLONGHASH) dune build src/app/logproc/logproc.exe src/app/cli/src/mina.exe --profile=$(DUNE_PROFILE)
+	# dune build src/app/logproc/logproc.exe --profile=$(DUNE_PROFILE)
+	# dune build src/app/cli/src/mina.exe --profile=$(DUNE_PROFILE)
+	dune build src/app/cli/src/mina.exe
 	$(info Build complete)
 
 build_all_sigs: ocaml_checks git_hooks reformat-diff libp2p_helper
