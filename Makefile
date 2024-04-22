@@ -2,8 +2,7 @@
 ## Configuration
 
 # Current OCaml version
-# OCAML_VERSION = "4.14.0"
-OCAML_VERSION = "4.14.1"
+OCAML_VERSION = "4.14.0"
 
 # machine word size
 WORD_SIZE = "64"

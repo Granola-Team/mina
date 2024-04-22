@@ -1,8 +1,10 @@
 #! /usr/bin/env nix-shell
-#! nix-shell -i bash -p bash ocaml opam openssl gmp libffi ocamlPackages.ocamlformat go capnproto
+#! nix-shell -i bash -p bash opam go capnproto
 
 set -x
 set -eu
+
+eval "$(opam env)"
 
 make ocaml_version
 make ocaml_word_size
@@ -10,3 +12,4 @@ make opam_init
 make ocaml_checks
 make reformat-diff
 make libp2p_helper
+make build
