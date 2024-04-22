@@ -83,6 +83,7 @@ automation/services/watchdog/check_libp2p/check_libp2p
 
 *.terraform.lock.hcl
 _opam
+opam
 
 target
 release

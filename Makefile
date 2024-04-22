@@ -2,7 +2,8 @@
 ## Configuration
 
 # Current OCaml version
-OCAML_VERSION = "4.14.0"
+# OCAML_VERSION = "4.14.0"
+OCAML_VERSION = "4.14.1"
 
 # machine word size
 WORD_SIZE = "64"
@@ -69,20 +70,13 @@ ocaml_version:
 ocaml_word_size:
 	@if ! ocamlopt -config | grep "word_size:" | grep $(WORD_SIZE); then echo "invalid machine word size, expected $(WORD_SIZE)" ; exit 1; fi
 
+opam/config: opam.export
+	opam init -n -y --reinit
+	opam switch -y import opam.export
 
-# Checks that the current opam switch contains the packages from opam.export at the same version.
-# This check is disabled in the pure nix environment (that does not use opam).
-check_opam_switch:
-ifneq ($(DISABLE_CHECK_OPAM_SWITCH), true)
-    ifeq (, $(shell which check_opam_switch))
-	$(warning The check_opam_switch binary was not found in the PATH.)
-	$(error The current opam switch should likely be updated by running: "opam switch import opam.export")
-    else
-	check_opam_switch opam.export
-    endif
-endif
+opam_init: opam/config
 
-ocaml_checks: ocaml_version ocaml_word_size check_opam_switch
+ocaml_checks: ocaml_version ocaml_word_size opam_init
 
 libp2p_helper:
 	make -C src/app/libp2p_helper
@@ -92,7 +86,7 @@ genesis_ledger: ocaml_checks
 	ulimit -s 65532 && (ulimit -n 10240 || true) && env MINA_COMMIT_SHA1=$(GITLONGHASH) dune exec --profile=$(DUNE_PROFILE) src/app/runtime_genesis_ledger/runtime_genesis_ledger.exe -- --genesis-dir $(GENESIS_DIR)
 	$(info Genesis ledger and genesis proof generated)
 
-build: ocaml_checks git_hooks reformat-diff libp2p_helper
+build: ocaml_checks reformat-diff libp2p_helper
 	$(info Starting Build)
 	ulimit -s 65532 && (ulimit -n 10240 || true) && env MINA_COMMIT_SHA1=$(GITLONGHASH) dune build src/app/logproc/logproc.exe src/app/cli/src/mina.exe --profile=$(DUNE_PROFILE)
 	$(info Build complete)
