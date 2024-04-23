@@ -3,6 +3,8 @@
 set -eu
 
 if [ -z "${MARLIN_PLONK_STUBS-}" ]; then
+    rustup show
+    cargo --version
     cargo build --release
     MARLIN_PLONK_STUBS="target/release"
 fi

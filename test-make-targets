@@ -1,5 +1,4 @@
-#! /usr/bin/env nix-shell
-#! nix-shell -i bash -p bash gnumake opam go capnproto libffi libsodium pkg-config gnum4 postgresql gmp cargo
+#! /usr/bin/env bash
 
 # Trace this script
 set -x
@@ -10,6 +9,11 @@ set -euo pipefail
 # Ensure that we have 'make', and print version debugging info.
 make --version
 
+# Ensure that we have 'opam', and print version.
+opam --version
+
+export OPAMROOT=../opam
+
 # Configure the shell according to the Makefile-prescribed configuration for Opam.
 make opam_init
 eval "$(opam env)"
@@ -18,7 +22,10 @@ eval "$(opam env)"
 command -v ocaml
 command -v ocamlopt
 command -v dune
+ocaml --version
 dune --version
+rustup --version
+go version
 
 # Make various targets, in dependency order.
 make ocaml_version

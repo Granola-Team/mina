@@ -1,6 +1,8 @@
 ########################################
 ## Configuration
 
+.EXPORT_ALL_VARIABLES:
+
 # Current OCaml version
 OCAML_VERSION = "4.14.0"
 
@@ -71,8 +73,10 @@ ocaml_word_size:
 	@if ! ocamlopt -config | grep "word_size:" | grep $(WORD_SIZE); then echo "invalid machine word size, expected $(WORD_SIZE)" ; exit 1; fi
 
 $(OPAMROOT)/config: opam.export
+	@echo OPAMROOT=$$OPAMROOT
 	opam init -n -y --reinit --bare
-	opam switch -y import --strict --assume-depexts opam.export
+	opam switch --switch=default -y import opam.export
+	scripts/pin-external-packages.sh
 
 opam_init: $(OPAMROOT)/config
 
@@ -87,11 +91,8 @@ genesis_ledger: ocaml_checks
 	$(info Genesis ledger and genesis proof generated)
 
 build: ocaml_checks reformat-diff libp2p_helper
-	$(info Starting Build)
 	dune build src/app/logproc/logproc.exe --profile=$(DUNE_PROFILE)
 	dune build src/app/cli/src/mina.exe --profile=$(DUNE_PROFILE)
-	# dune build src/app/cli/src/mina.exe
-	$(info Build complete)
 
 build_all_sigs: ocaml_checks git_hooks reformat-diff libp2p_helper
 	$(info Starting Build)
