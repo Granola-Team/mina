@@ -1159,11 +1159,42 @@ let setup_daemon logger =
               {|No peers were given.
 
 Pass one of -peer, -peer-list-file, -seed, -peer-list-url.|} ;
+          let genesis_constants = precomputed_values.genesis_constants in
+          [%log info]
+            "Genesis constants:\n\
+            \  k: $k\n\
+            \  slots_per_epoch: $slots_per_epoch\n\
+            \  slots_per_sub_window: $slots_per_sub_window\n\
+            \  delta: $delta\n\
+            \  txpool_max_size: $txpool_max_size\n\
+            \  timestamp: $timestamp"
+            ~metadata:
+              [ ("k", `Int genesis_constants.protocol.k)
+              ; ( "slots_per_epoch"
+                , `Int genesis_constants.protocol.slots_per_epoch )
+              ; ( "slots_per_sub_window"
+                , `Int genesis_constants.protocol.slots_per_sub_window )
+              ; ("delta", `Int genesis_constants.protocol.delta)
+              ; ("txpool_max_size", `Int genesis_constants.txpool_max_size)
+              ; ( "timestamp"
+                , `String
+                    (Time.to_string_abs ~zone:Time.Zone.utc
+                       (Time.of_span_since_epoch
+                          (Time.Span.of_ms
+                             (Int64.to_float
+                                genesis_constants.protocol
+                                  .genesis_state_timestamp ) ) ) ) )
+              ] ;
+          let constraint_system_digests =
+            Lazy.force precomputed_values.constraint_system_digests
+          in
+          [%log info] "Constraint system digests:\n%s"
+          @@ String.concat ~sep:"\n"
+          @@ List.map constraint_system_digests ~f:(fun (s, md5) ->
+                 sprintf "  %s: %s" s @@ Md5.to_hex md5 ) ;
           let chain_id =
-            chain_id ~genesis_state_hash
-              ~genesis_constants:precomputed_values.genesis_constants
-              ~constraint_system_digests:
-                (Lazy.force precomputed_values.constraint_system_digests)
+            chain_id ~genesis_state_hash ~genesis_constants
+              ~constraint_system_digests
           in
           [%log info] "Chain id: %s" chain_id ;
           let gossip_net_params =
