@@ -1,6 +1,6 @@
 steps:
 
-- label: "Build, Lint, and Audit"
+- label: "Perform Nix Flake build"
   command: |
     # Get Nix version for possible debugging.
     nix --version
@@ -13,4 +13,13 @@ steps:
     # Use the Nix build (with logging) of that newly cloned repository.
     cd mina
     nix build -L '.?submodules=1'
+  key: nix-build
+  agent:
+    nix: true
+
+- label: "Perform modified Makefile build"
+  command: |
+    ops/make-build
   key: build
+  agent:
+    os-family: ubuntu
