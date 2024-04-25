@@ -14,12 +14,12 @@ steps:
     cd mina
     nix build -L '.?submodules=1'
   key: nix-build
-  agent:
+  agents:
     nix: true
 
 - label: "Perform modified Makefile build"
   command: |
     ops/make-build
   key: build
-  agent:
+  agents:
     os-family: ubuntu
