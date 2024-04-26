@@ -68,6 +68,7 @@ make extract_blocks
 make reformat-diff
 make libp2p_helper
 make missing_blocks_auditor
+make replayer
 # make build
 # make archive_blocks
 

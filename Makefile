@@ -162,9 +162,7 @@ dhall_types: ocaml_checks
 	$(info Build complete)
 
 replayer: ocaml_checks
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/replayer/replayer.exe --profile=testnet_postake_medium_curves
-	$(info Build complete)
+	dune build src/app/replayer/replayer.exe --profile=testnet_postake_medium_curves
 
 delegation_compliance: ocaml_checks
 	$(info Starting Build)
