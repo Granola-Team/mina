@@ -4,6 +4,7 @@ user.bazelrc
 .cpcache/
 
 _build*
+/_coverage/
 *.pdf
 *.install
 .merlin*

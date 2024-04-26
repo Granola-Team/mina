@@ -3,39 +3,20 @@
 
 .EXPORT_ALL_VARIABLES:
 
-# Current OCaml version
 OCAML_VERSION = "4.14.0"
-
-# machine word size
 WORD_SIZE = "64"
-
-# Default profile
 DUNE_PROFILE ?= dev
-
 OPAMROOT ?= ../opam
-
-# Temp directory
+RUSTUP_HOME ?= ../rustup
+CARGO_HOME ?= ../cargo
 TMPDIR ?= /tmp
-
-# Genesis dir
 GENESIS_DIR := $(TMPDIR)/coda_cache_dir
-
-# Coverage directory
-COVERAGE_DIR=_coverage
-
-########################################
-## Handy variables
-
-# This commit hash
 GITHASH := $(shell git rev-parse --short=8 HEAD)
 GITLONGHASH := $(shell git rev-parse HEAD)
 MINA_COMMIT_SHA1 := $(GITLONGHASH)
 
 # Unique signature of libp2p code tree
 LIBP2P_HELPER_SIG := $(shell cd src/app/libp2p_helper ; find . -type f -print0  | xargs -0 sha1sum | sort | sha1sum | cut -f 1 -d ' ')
-
-########################################
-## Git hooks
 
 git_hooks: $(wildcard scripts/git_hooks/*)
 	@case "$$(file .git | cut -d: -f2)" in \
@@ -53,15 +34,14 @@ git_hooks: $(wildcard scripts/git_hooks/*)
 	    break;; \
 	esac
 
-########################################
-## Code
-
 all: clean build
 
 clean:
 	$(info Removing previous build artifacts)
 	@rm -rf _build
-	@rm -rf src/$(COVERAGE_DIR)
+	@rm -rf _coverage
+	@rm -f src/config.mlh
+	@rm -rf src/libp2p_ipc/build/
 	@rm -rf src/app/libp2p_helper/result src/libp2p_ipc/libp2p_ipc.capnp.go
 
 # enforces the OCaml version being used
@@ -82,6 +62,11 @@ opam_init: $(OPAMROOT)/config
 
 ocaml_checks: opam_init ocaml_version ocaml_word_size
 
+rust_init: $(CARGO_HOME)/bin/cargo
+
+$(CARGO_HOME)/bin/cargo:
+	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
 libp2p_helper:
 	make -C src/app/libp2p_helper
 
@@ -90,7 +75,7 @@ genesis_ledger: ocaml_checks
 	ulimit -s 65532 && (ulimit -n 10240 || true) && env MINA_COMMIT_SHA1=$(GITLONGHASH) dune exec --profile=$(DUNE_PROFILE) src/app/runtime_genesis_ledger/runtime_genesis_ledger.exe -- --genesis-dir $(GENESIS_DIR)
 	$(info Genesis ledger and genesis proof generated)
 
-build: ocaml_checks reformat-diff libp2p_helper
+build: ocaml_checks reformat-diff libp2p_helper rust_init
 	dune build src/app/logproc/logproc.exe --profile=$(DUNE_PROFILE)
 	dune build src/app/cli/src/mina.exe --profile=$(DUNE_PROFILE)
 
@@ -99,10 +84,8 @@ build_all_sigs: ocaml_checks git_hooks reformat-diff libp2p_helper
 	ulimit -s 65532 && (ulimit -n 10240 || true) && env MINA_COMMIT_SHA1=$(GITLONGHASH) dune build src/app/logproc/logproc.exe src/app/cli/src/mina.exe src/app/cli/src/mina_testnet_signatures.exe src/app/cli/src/mina_mainnet_signatures.exe --profile=$(DUNE_PROFILE)
 	$(info Build complete)
 
-build_archive: ocaml_checks git_hooks reformat-diff
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/archive/archive.exe --profile=$(DUNE_PROFILE)
-	$(info Build complete)
+build_archive: ocaml_checks reformat-diff
+	dune build src/app/archive/archive.exe --profile=$(DUNE_PROFILE)
 
 build_archive_all_sigs: ocaml_checks git_hooks reformat-diff
 	$(info Starting Build)
@@ -125,14 +108,10 @@ build_intgtest: ocaml_checks
 	$(info Build complete)
 
 client_sdk: ocaml_checks
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/client_sdk/client_sdk.bc.js --profile=nonconsensus_mainnet
-	$(info Build complete)
+	dune build src/app/client_sdk/client_sdk.bc.js --profile=nonconsensus_mainnet
 
 client_sdk_test_sigs: ocaml_checks
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/client_sdk/tests/test_signatures.exe --profile=mainnet
-	$(info Build complete)
+	dune build src/app/client_sdk/tests/test_signatures.exe --profile=mainnet
 
 client_sdk_test_sigs_nonconsensus: ocaml_checks
 	$(info Starting Build)
@@ -150,14 +129,10 @@ rosetta_lib_encodings_nonconsensus: ocaml_checks
 	$(info Build complete)
 
 dhall_types: ocaml_checks
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/dhall_types/dump_dhall_types.exe --profile=dev
-	$(info Build complete)
+	dune build src/app/dhall_types/dump_dhall_types.exe --profile=dev
 
 replayer: ocaml_checks
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/replayer/replayer.exe --profile=testnet_postake_medium_curves
-	$(info Build complete)
+	dune build src/app/replayer/replayer.exe --profile=testnet_postake_medium_curves
 
 delegation_compliance: ocaml_checks
 	$(info Starting Build)
@@ -165,19 +140,13 @@ delegation_compliance: ocaml_checks
 	$(info Build complete)
 
 missing_blocks_auditor: ocaml_checks
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/missing_blocks_auditor/missing_blocks_auditor.exe --profile=testnet_postake_medium_curves
-	$(info Build complete)
+	dune build src/app/missing_blocks_auditor/missing_blocks_auditor.exe --profile=testnet_postake_medium_curves
 
 extract_blocks: ocaml_checks
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/extract_blocks/extract_blocks.exe --profile=testnet_postake_medium_curves
-	$(info Build complete)
+	dune build src/app/extract_blocks/extract_blocks.exe --profile=testnet_postake_medium_curves
 
 archive_blocks: ocaml_checks
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/archive_blocks/archive_blocks.exe --profile=testnet_postake_medium_curves
-	$(info Build complete)
+	dune build src/app/archive_blocks/archive_blocks.exe --profile=testnet_postake_medium_curves
 
 patch_archive_test: ocaml_checks
 	$(info Starting Build)
@@ -185,16 +154,12 @@ patch_archive_test: ocaml_checks
 	$(info Build complete)
 
 genesis_ledger_from_tsv: ocaml_checks
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/genesis_ledger_from_tsv/genesis_ledger_from_tsv.exe --profile=testnet_postake_medium_curves
-	$(info Build complete)
+	dune build src/app/genesis_ledger_from_tsv/genesis_ledger_from_tsv.exe --profile=testnet_postake_medium_curves
 
 swap_bad_balances: ocaml_checks
 	$(info Starting Build)
 	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/swap_bad_balances/swap_bad_balances.exe --profile=testnet_postake_medium_curves
 	$(info Build complete)
-
-dev: build
 
 macos-portable:
 	@rm -rf _build/coda-daemon-macos/
@@ -210,7 +175,7 @@ update-graphql:
 ########################################
 ## Lint
 
-reformat: ocaml_checks git_hooks
+reformat: ocaml_checks
 	dune exec --profile=$(DUNE_PROFILE) src/app/reformat/reformat.exe -- -path .
 
 reformat-diff:
@@ -300,18 +265,10 @@ test-coverage: libp2p_helper
 
 # we don't depend on test-coverage, which forces a run of all unit tests
 coverage-html:
-ifeq ($(shell find _build/default -name bisect\*.out),"")
-	echo "No coverage output; run make test-coverage"
-else
 	bisect-ppx-report html --source-path=_build/default --coverage-path=_build/default
-endif
 
 coverage-summary:
-ifeq ($(shell find _build/default -name bisect\*.out),"")
-	echo "No coverage output; run make test-coverage"
-else
 	bisect-ppx-report summary --coverage-path=_build/default --per-file
-endif
 
 ########################################
 # Diagrams for documentation
@@ -345,4 +302,4 @@ ml-docs: ocaml_checks
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 # HACK: cat Makefile | egrep '^\w.*' | sed 's/:/ /' | awk '{print $1}' | grep -v myprocs | sort | xargs
 
-.PHONY: all build check-format clean client_sdk client_sdk_test_sigs deb dev mina-docker reformat doc_diagrams ml-docs macos-setup macos-setup-download setup-opam libp2p_helper dhall_types replayer missing_blocks_auditor extract_blocks archive_blocks genesis_ledger_from_tsv ocaml_version ocaml_word_size ocaml_checks
+.PHONY: all build check-format clean client_sdk client_sdk_test_sigs deb reformat doc_diagrams ml-docs macos-setup-download libp2p_helper dhall_types replayer missing_blocks_auditor extract_blocks archive_blocks genesis_ledger_from_tsv ocaml_version ocaml_word_size ocaml_checks
