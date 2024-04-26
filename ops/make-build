@@ -64,10 +64,11 @@ go version
 make ocaml_version
 make ocaml_word_size
 make ocaml_checks
+make extract_blocks
 make reformat-diff
 make libp2p_helper
-make build
-make archive_blocks
+# make build
+# make archive_blocks
 
 # Not working:
 # make genesis_ledger_from_tsv

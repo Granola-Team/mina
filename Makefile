@@ -177,9 +177,7 @@ missing_blocks_auditor: ocaml_checks
 	$(info Build complete)
 
 extract_blocks: ocaml_checks
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/extract_blocks/extract_blocks.exe --profile=testnet_postake_medium_curves
-	$(info Build complete)
+	dune build src/app/extract_blocks/extract_blocks.exe --profile=testnet_postake_medium_curves
 
 archive_blocks: ocaml_checks
 	dune build src/app/archive_blocks/archive_blocks.exe --profile=testnet_postake_medium_curves
