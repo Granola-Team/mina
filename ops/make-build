@@ -6,6 +6,20 @@ set -x
 # Ensure that we are running Bash. Set safe defaults.
 set -euo pipefail
 
+exit_handler() {
+  if [ "$OPAMROOT" ]; then
+    rm -fr "$OPAMROOT"
+  fi
+  if [ "$CARGO_HOME" ]; then
+    rm -fr "$CARGO_HOME"
+  fi
+  if [ "$RUSTUP_HOME" ]; then
+    rm -fr "$RUSTUP_HOME"
+  fi
+}
+
+trap exit_handler INT TERM QUIT EXIT
+
 # Ensure that we have 'make', and print version debugging info.
 make --version
 
@@ -21,6 +35,11 @@ REV="$(git rev-parse --short HEAD)"
 export RUSTUP_HOME="$HOME"/mina-rustup-dirs/"$REV"
 export CARGO_HOME="$HOME"/mina-cargo-dirs/"$REV"
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+# Required to add 'rustup' to the PATH, etc.
+. "$CARGO_HOME"/env
+
+# Verify that it is available.
 rustup --version
 
 # Configure the shell according to the Makefile-prescribed configuration for Opam.
@@ -45,7 +64,3 @@ make ocaml_checks
 make reformat-diff
 make libp2p_helper
 make build
-
-rm -fr "$OPAMROOT"
-rm -fr "$CARGO_HOME"
-rm -fr "$RUSTUP_HOME"
