@@ -17,9 +17,14 @@ git --version
 
 REV="$(git rev-parse --short HEAD)"
 
-export OPAMROOT="$HOME"/mina-opam-roots/"$REV"
+# Install Rust and Cargo
+export RUSTUP_HOME="$HOME"/mina-rustup-dirs/"$REV"
+export CARGO_HOME="$HOME"/mina-cargo-dirs/"$REV"
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+rustup --version
 
 # Configure the shell according to the Makefile-prescribed configuration for Opam.
+export OPAMROOT="$HOME"/mina-opam-roots/"$REV"
 make opam_init
 eval "$(opam env)"
 
@@ -29,7 +34,8 @@ command -v ocamlopt
 command -v dune
 ocaml --version
 dune --version
-rustup --version
+
+# Ensure that we have 'go'.
 go version
 
 # Make various targets, in dependency order.
@@ -41,3 +47,5 @@ make libp2p_helper
 make build
 
 rm -fr "$OPAMROOT"
+rm -fr "$CARGO_HOME"
+rm -fr "$RUSTUP_HOME"
