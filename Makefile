@@ -205,7 +205,7 @@ update-graphql:
 ########################################
 ## Lint
 
-reformat: ocaml_checks git_hooks
+reformat: ocaml_checks
 	dune exec --profile=$(DUNE_PROFILE) src/app/reformat/reformat.exe -- -path .
 
 reformat-diff:
@@ -295,11 +295,7 @@ test-coverage: libp2p_helper
 
 # we don't depend on test-coverage, which forces a run of all unit tests
 coverage-html:
-ifeq ($(shell find _build/default -name bisect\*.out),"")
-	echo "No coverage output; run make test-coverage"
-else
 	bisect-ppx-report html --source-path=_build/default --coverage-path=_build/default
-endif
 
 coverage-summary:
 ifeq ($(shell find _build/default -name bisect\*.out),"")
@@ -340,4 +336,4 @@ ml-docs: ocaml_checks
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 # HACK: cat Makefile | egrep '^\w.*' | sed 's/:/ /' | awk '{print $1}' | grep -v myprocs | sort | xargs
 
-.PHONY: all build check-format clean client_sdk client_sdk_test_sigs deb dev mina-docker reformat doc_diagrams ml-docs macos-setup macos-setup-download setup-opam libp2p_helper dhall_types replayer missing_blocks_auditor extract_blocks archive_blocks genesis_ledger_from_tsv ocaml_version ocaml_word_size ocaml_checks
+.PHONY: all build check-format clean client_sdk client_sdk_test_sigs deb dev mina-docker reformat doc_diagrams ml-docs macos-setup-download libp2p_helper dhall_types replayer missing_blocks_auditor extract_blocks archive_blocks genesis_ledger_from_tsv ocaml_version ocaml_word_size ocaml_checks

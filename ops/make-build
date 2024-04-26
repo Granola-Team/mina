@@ -65,13 +65,19 @@ make ocaml_version
 make ocaml_word_size
 make ocaml_checks
 make reformat-diff
-make libp2p_helper
-make dhall_types
-# make missing_blocks_auditor
-# make replayer
-# make extract_blocks
-# make build
-# make archive_blocks
+#make libp2p_helper
+#make dhall_types
+#make doc_diagrams
+#make missing_blocks_auditor
+#make replayer
+#make extract_blocks
+#make build
+make coverage-html
+make coverage-summary
+make reformat
+make archive_blocks
 
 # Not working:
 # make genesis_ledger_from_tsv
+# make ml-docs
+# make test-coverage
