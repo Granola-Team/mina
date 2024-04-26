@@ -67,6 +67,7 @@ make ocaml_checks
 make extract_blocks
 make reformat-diff
 make libp2p_helper
+make missing_blocks_auditor
 # make build
 # make archive_blocks
 

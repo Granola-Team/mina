@@ -172,9 +172,7 @@ delegation_compliance: ocaml_checks
 	$(info Build complete)
 
 missing_blocks_auditor: ocaml_checks
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/missing_blocks_auditor/missing_blocks_auditor.exe --profile=testnet_postake_medium_curves
-	$(info Build complete)
+	dune build src/app/missing_blocks_auditor/missing_blocks_auditor.exe --profile=testnet_postake_medium_curves
 
 extract_blocks: ocaml_checks
 	dune build src/app/extract_blocks/extract_blocks.exe --profile=testnet_postake_medium_curves
