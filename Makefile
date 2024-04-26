@@ -13,6 +13,8 @@ WORD_SIZE = "64"
 DUNE_PROFILE ?= dev
 
 OPAMROOT ?= ../opam
+RUSTUP_HOME ?= ../rustup
+CARGO_HOME ?= ../cargo
 
 # Temp directory
 TMPDIR ?= /tmp
@@ -82,6 +84,11 @@ opam_init: $(OPAMROOT)/config
 
 ocaml_checks: opam_init ocaml_version ocaml_word_size
 
+rust_init: $(CARGO_HOME)/bin/cargo
+
+$(CARGO_HOME)/bin/cargo:
+	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
 libp2p_helper:
 	make -C src/app/libp2p_helper
 
@@ -90,7 +97,7 @@ genesis_ledger: ocaml_checks
 	ulimit -s 65532 && (ulimit -n 10240 || true) && env MINA_COMMIT_SHA1=$(GITLONGHASH) dune exec --profile=$(DUNE_PROFILE) src/app/runtime_genesis_ledger/runtime_genesis_ledger.exe -- --genesis-dir $(GENESIS_DIR)
 	$(info Genesis ledger and genesis proof generated)
 
-build: ocaml_checks reformat-diff libp2p_helper
+build: ocaml_checks reformat-diff libp2p_helper rust_init
 	dune build src/app/logproc/logproc.exe --profile=$(DUNE_PROFILE)
 	dune build src/app/cli/src/mina.exe --profile=$(DUNE_PROFILE)
 
@@ -175,9 +182,7 @@ extract_blocks: ocaml_checks
 	$(info Build complete)
 
 archive_blocks: ocaml_checks
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/archive_blocks/archive_blocks.exe --profile=testnet_postake_medium_curves
-	$(info Build complete)
+	dune build src/app/archive_blocks/archive_blocks.exe --profile=testnet_postake_medium_curves
 
 patch_archive_test: ocaml_checks
 	$(info Starting Build)
@@ -185,9 +190,7 @@ patch_archive_test: ocaml_checks
 	$(info Build complete)
 
 genesis_ledger_from_tsv: ocaml_checks
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && dune build src/app/genesis_ledger_from_tsv/genesis_ledger_from_tsv.exe --profile=testnet_postake_medium_curves
-	$(info Build complete)
+	dune build src/app/genesis_ledger_from_tsv/genesis_ledger_from_tsv.exe --profile=testnet_postake_medium_curves
 
 swap_bad_balances: ocaml_checks
 	$(info Starting Build)

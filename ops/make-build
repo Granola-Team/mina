@@ -7,13 +7,13 @@ set -x
 set -euo pipefail
 
 exit_handler() {
-  if [ "$OPAMROOT" ]; then
+  if [[ "$OPAMROOT" =~ "$REV" ]]; then
     rm -fr "$OPAMROOT"
   fi
-  if [ "$CARGO_HOME" ]; then
+  if [[ "$CARGO_HOME" =~ "$REV" ]]; then
     rm -fr "$CARGO_HOME"
   fi
-  if [ "$RUSTUP_HOME" ]; then
+  if [[ "$RUSTUP_HOME" =~ "$REV" ]]; then
     rm -fr "$RUSTUP_HOME"
   fi
 }
@@ -32,18 +32,21 @@ git --version
 REV="$(git rev-parse --short HEAD)"
 
 # Install Rust and Cargo
-export RUSTUP_HOME="$HOME"/mina-rustup-dirs/"$REV"
-export CARGO_HOME="$HOME"/mina-cargo-dirs/"$REV"
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+: ${RUSTUP_HOME:="$HOME"/mina-rustup-dirs/"$REV"}
+: ${CARGO_HOME:="$HOME"/mina-cargo-dirs/"$REV"}
+export RUSTUP_HOME CARGO_HOME
+make rust_init
 
 # Required to add 'rustup' to the PATH, etc.
 . "$CARGO_HOME"/env
 
-# Verify that it is available.
+# Verify that rustup and cargo are available.
 rustup --version
+cargo --version
 
 # Configure the shell according to the Makefile-prescribed configuration for Opam.
-export OPAMROOT="$HOME"/mina-opam-roots/"$REV"
+: ${OPAMROOT:="$HOME"/mina-opam-roots/"$REV"}
+export OPAMROOT
 make opam_init
 eval "$(opam env)"
 
@@ -64,3 +67,7 @@ make ocaml_checks
 make reformat-diff
 make libp2p_helper
 make build
+make archive_blocks
+
+# Not working:
+# make genesis_ledger_from_tsv
