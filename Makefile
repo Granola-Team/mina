@@ -1,6 +1,8 @@
 ########################################
 ## Configuration
 
+.EXPORT_ALL_VARIABLES:
+
 # Current OCaml version
 OCAML_VERSION = "4.14.0"
 
@@ -8,9 +10,9 @@ OCAML_VERSION = "4.14.0"
 WORD_SIZE = "64"
 
 # Default profile
-ifeq ($(DUNE_PROFILE),)
-DUNE_PROFILE := dev
-endif
+DUNE_PROFILE ?= dev
+
+OPAMROOT ?= ../opam
 
 # Temp directory
 TMPDIR ?= /tmp
@@ -27,6 +29,7 @@ COVERAGE_DIR=_coverage
 # This commit hash
 GITHASH := $(shell git rev-parse --short=8 HEAD)
 GITLONGHASH := $(shell git rev-parse HEAD)
+MINA_COMMIT_SHA1 := $(GITLONGHASH)
 
 # Unique signature of libp2p code tree
 LIBP2P_HELPER_SIG := $(shell cd src/app/libp2p_helper ; find . -type f -print0  | xargs -0 sha1sum | sort | sha1sum | cut -f 1 -d ' ')
@@ -69,20 +72,15 @@ ocaml_version:
 ocaml_word_size:
 	@if ! ocamlopt -config | grep "word_size:" | grep $(WORD_SIZE); then echo "invalid machine word size, expected $(WORD_SIZE)" ; exit 1; fi
 
+$(OPAMROOT)/config: opam.export
+	@echo OPAMROOT=$$OPAMROOT
+	opam init -n -y --reinit --bare
+	opam switch --switch=default -y import opam.export
+	scripts/pin-external-packages.sh
 
-# Checks that the current opam switch contains the packages from opam.export at the same version.
-# This check is disabled in the pure nix environment (that does not use opam).
-check_opam_switch:
-ifneq ($(DISABLE_CHECK_OPAM_SWITCH), true)
-    ifeq (, $(shell which check_opam_switch))
-	$(warning The check_opam_switch binary was not found in the PATH.)
-	$(error The current opam switch should likely be updated by running: "opam switch import opam.export")
-    else
-	check_opam_switch opam.export
-    endif
-endif
+opam_init: $(OPAMROOT)/config
 
-ocaml_checks: ocaml_version ocaml_word_size check_opam_switch
+ocaml_checks: opam_init ocaml_version ocaml_word_size
 
 libp2p_helper:
 	make -C src/app/libp2p_helper
@@ -92,10 +90,9 @@ genesis_ledger: ocaml_checks
 	ulimit -s 65532 && (ulimit -n 10240 || true) && env MINA_COMMIT_SHA1=$(GITLONGHASH) dune exec --profile=$(DUNE_PROFILE) src/app/runtime_genesis_ledger/runtime_genesis_ledger.exe -- --genesis-dir $(GENESIS_DIR)
 	$(info Genesis ledger and genesis proof generated)
 
-build: ocaml_checks git_hooks reformat-diff libp2p_helper
-	$(info Starting Build)
-	ulimit -s 65532 && (ulimit -n 10240 || true) && env MINA_COMMIT_SHA1=$(GITLONGHASH) dune build src/app/logproc/logproc.exe src/app/cli/src/mina.exe --profile=$(DUNE_PROFILE)
-	$(info Build complete)
+build: ocaml_checks reformat-diff libp2p_helper
+	dune build src/app/logproc/logproc.exe --profile=$(DUNE_PROFILE)
+	dune build src/app/cli/src/mina.exe --profile=$(DUNE_PROFILE)
 
 build_all_sigs: ocaml_checks git_hooks reformat-diff libp2p_helper
 	$(info Starting Build)
