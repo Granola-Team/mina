@@ -64,11 +64,12 @@ go version
 make ocaml_version
 make ocaml_word_size
 make ocaml_checks
-make extract_blocks
 make reformat-diff
 make libp2p_helper
-make missing_blocks_auditor
-make replayer
+make dhall_types
+# make missing_blocks_auditor
+# make replayer
+# make extract_blocks
 # make build
 # make archive_blocks
 
