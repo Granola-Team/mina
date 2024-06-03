@@ -19,7 +19,7 @@ steps:
 
 - label: "Perform modified Makefile build"
   command: |
-    ops/make-build
+    ops/make-many-targets
   key: build
   agents:
     os-family: ubuntu
