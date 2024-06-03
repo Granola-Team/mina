@@ -6,6 +6,11 @@ set -x
 # Ensure that we are running Bash. Set safe defaults.
 set -euo pipefail
 
+sudo apt install -y \
+  git make opam libgmp-dev libpq-dev \
+  pkg-config libffi-dev libssl-dev \
+  libsodium-dev
+
 # Ensure that we have 'make', and print version debugging info.
 make --version
 
