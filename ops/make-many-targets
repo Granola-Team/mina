@@ -6,6 +6,20 @@ set -x
 # Ensure that we are running Bash. Set safe defaults.
 set -euo pipefail
 
+exit_handler() {
+  if [[ "$OPAMROOT" =~ "$REV" ]]; then
+    rm -fr "$OPAMROOT"
+  fi
+  if [[ "$CARGO_HOME" =~ "$REV" ]]; then
+    rm -fr "$CARGO_HOME"
+  fi
+  if [[ "$RUSTUP_HOME" =~ "$REV" ]]; then
+    rm -fr "$RUSTUP_HOME"
+  fi
+}
+
+trap exit_handler INT TERM QUIT EXIT
+
 # Ensure that we have 'make', and print version debugging info.
 make --version
 
@@ -48,5 +62,31 @@ go version
 
 # Make various targets, in dependency order.
 make ocaml_version
+make ocaml_word_size
+make ocaml_checks
+make reformat-diff
+make check-format
+make libp2p_helper
+make dhall_types
+make doc_diagrams
+make missing_blocks_auditor
+make replayer
+make extract_blocks
+make test-ppx
 make build
 make build_archive
+# make coverage-html
+# make coverage-summary
+make client_sdk_test_sigs
+make client_sdk
+make archive_blocks
+make reformat
+make clean
+
+# Not working:
+# make genesis_ledger_from_tsv
+# make ml-docs
+# make test-coverage
+# make deb  # Requires Buildkite stuff
+# make benchmarks
+# make web
