@@ -1,0 +1,23 @@
+(executable
+ (name mina_txn_hasher)
+ (libraries
+  ;; opam libraries
+  async_kernel
+  async
+  core
+  uri
+  yojson
+  core_kernel
+  cmdliner
+  base.base_internalhash_types
+  base.caml
+  async_unix
+  unsigned_extended
+  stdio
+  sexplib0
+  ;; local libraries
+  mina_base
+  mina_stdlib
+  mina_transaction)
+ (preprocess
+  (pps ppx_mina ppx_jane ppx_deriving_yojson ppx_mina ppx_version)))
