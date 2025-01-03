@@ -94,7 +94,6 @@ target
 
 ### Direnv ###
 .env
-.envrc
 .direnv/
 
 # pipenv
